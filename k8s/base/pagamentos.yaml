@@ -1,0 +1,110 @@
+# pagamentos: Integração com o provedor de pagamento externo
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pagamentos
+  labels:
+    app.kubernetes.io/name: pagamentos
+    app.kubernetes.io/component: backend
+spec:
+  replicas: 2                 # ponto de partida; o HPA ajusta quando existir
+  revisionHistoryLimit: 5     # permite "kubectl rollout undo"
+  # Rolling Update sem indisponibilidade: sobe 1 Pod novo, espera ficar
+  # "ready" e só então remove 1 antigo (nunca fica abaixo do nº desejado).
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pagamentos
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pagamentos
+        app.kubernetes.io/component: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: /metrics
+    spec:
+      automountServiceAccountToken: false   # o app não acessa a API do Kubernetes
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      # Espalha as réplicas entre nós: a queda de um nó não derruba o serviço.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: pagamentos
+      containers:
+        - name: pagamentos
+          image: ghcr.io/bonanni92/pedidos-veloz-pagamentos:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: veloz-config
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: pagamentos
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }   # base para o HPA (% de CPU)
+            limits: { cpu: 500m, memory: 256Mi }
+          # startup: dá tempo ao app (ex.: aguardar o banco) antes das demais probes
+          startupProbe:
+            httpGet: { path: /health/live, port: http }
+            periodSeconds: 5
+            failureThreshold: 30
+          # readiness: só recebe tráfego quando estiver pronto (essencial no rolling update)
+          readinessProbe:
+            httpGet: { path: /health/ready, port: http }
+            periodSeconds: 5
+            failureThreshold: 3
+          # liveness: reinicia o contêiner se o processo travar
+          livenessProbe:
+            httpGet: { path: /health/live, port: http }
+            periodSeconds: 10
+            failureThreshold: 3
+          lifecycle:
+            preStop:
+              exec:
+                # aguarda o Service remover o Pod dos endpoints antes do SIGTERM
+                command: ["sleep", "5"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pagamentos
+  labels:
+    app.kubernetes.io/name: pagamentos
+spec:
+  type: ClusterIP              # acessível apenas dentro do cluster
+  selector:
+    app.kubernetes.io/name: pagamentos
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

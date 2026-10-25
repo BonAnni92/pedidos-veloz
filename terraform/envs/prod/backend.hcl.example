@@ -1,0 +1,6 @@
+# Copie para backend.hcl e ajuste. O bucket deve existir previamente.
+bucket       = "loja-veloz-terraform-state"
+key          = "pedidos-veloz/prod/terraform.tfstate"
+region       = "sa-east-1"
+encrypt      = true
+use_lockfile = true # lock nativo no S3: evita dois "apply" simultâneos

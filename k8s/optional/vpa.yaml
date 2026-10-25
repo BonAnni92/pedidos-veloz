@@ -1,0 +1,33 @@
+# Vertical Pod Autoscaler em modo RECOMENDAÇÃO (updateMode: "Off").
+# Requer o VPA instalado: https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler
+#   kubectl apply -f k8s/optional/vpa.yaml
+#   kubectl describe vpa -n loja-veloz
+# Por quê "Off"? HPA e VPA atuando sobre a MESMA métrica (CPU) brigam entre si.
+# O VPA apenas sugere requests/limits ideais, que revisamos e aplicamos no Git.
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata: { name: pedidos, namespace: loja-veloz }
+spec:
+  targetRef: { apiVersion: apps/v1, kind: Deployment, name: pedidos }
+  updatePolicy: { updateMode: "Off" }
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata: { name: estoque, namespace: loja-veloz }
+spec:
+  targetRef: { apiVersion: apps/v1, kind: Deployment, name: estoque }
+  updatePolicy: { updateMode: "Off" }
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata: { name: pagamentos, namespace: loja-veloz }
+spec:
+  targetRef: { apiVersion: apps/v1, kind: Deployment, name: pagamentos }
+  updatePolicy: { updateMode: "Off" }
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata: { name: gateway, namespace: loja-veloz }
+spec:
+  targetRef: { apiVersion: apps/v1, kind: Deployment, name: gateway }
+  updatePolicy: { updateMode: "Off" }

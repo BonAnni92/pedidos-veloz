@@ -1,0 +1,66 @@
+# Escala horizontal automática (HPA) para os serviços que recebem os picos
+# da campanha. Requer o metrics-server no cluster.
+# Pagamentos NÃO tem HPA: seu gargalo é o limite de requisições do provedor
+# externo, então mais réplicas não aumentariam a vazão (réplicas fixas = 2).
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: gateway
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: gateway }
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 70 }
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0       # reage rápido ao pico
+      policies:
+        - { type: Pods, value: 4, periodSeconds: 15 }
+    scaleDown:
+      stabilizationWindowSeconds: 300     # evita "efeito sanfona"
+      policies:
+        - { type: Percent, value: 50, periodSeconds: 60 }
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: pedidos
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: pedidos }
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 70 }
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - { type: Pods, value: 4, periodSeconds: 15 }
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - { type: Percent, value: 50, periodSeconds: 60 }
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: estoque
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: estoque }
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 70 }
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300

@@ -1,0 +1,85 @@
+# Zero trust na rede do namespace: tudo é bloqueado por padrão e liberamos
+# apenas os fluxos que a arquitetura precisa.
+#   cliente -> gateway -> pedidos -> estoque / pagamentos
+#   gateway -> estoque (catálogo);  pedidos/estoque -> postgres
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway-allow-external
+spec:
+  podSelector: { matchLabels: { app.kubernetes.io/name: gateway } }
+  policyTypes: [Ingress]
+  ingress:
+    - ports: [{ port: 8000 }]       # entrada pública (via Ingress controller)
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: pedidos-allow-gateway
+spec:
+  podSelector: { matchLabels: { app.kubernetes.io/name: pedidos } }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app.kubernetes.io/name: gateway } }
+      ports: [{ port: 8000 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: estoque-allow-gateway-pedidos
+spec:
+  podSelector: { matchLabels: { app.kubernetes.io/name: estoque } }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app.kubernetes.io/name: gateway } }
+        - podSelector: { matchLabels: { app.kubernetes.io/name: pedidos } }
+      ports: [{ port: 8000 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: pagamentos-allow-pedidos
+spec:
+  podSelector: { matchLabels: { app.kubernetes.io/name: pagamentos } }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app.kubernetes.io/name: pedidos } }
+      ports: [{ port: 8000 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-allow-apps
+spec:
+  podSelector: { matchLabels: { app.kubernetes.io/name: postgres } }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app.kubernetes.io/name: pedidos } }
+        - podSelector: { matchLabels: { app.kubernetes.io/name: estoque } }
+      ports: [{ port: 5432 }]
+---
+# Permite que o Prometheus (namespace "observability") colete /metrics
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-metrics-scrape
+spec:
+  podSelector: { matchLabels: { app.kubernetes.io/part-of: pedidos-veloz } }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: observability }
+      ports: [{ port: 8000 }]

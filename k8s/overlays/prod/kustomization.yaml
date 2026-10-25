@@ -1,0 +1,25 @@
+# Overlay PRODUÇÃO - aplicado pelo pipeline (job "deploy" do GitHub Actions):
+#   1. o pipeline cria o Secret "veloz-db-credentials" a partir dos GitHub Secrets;
+#   2. "kustomize edit set image" fixa a tag imutável (sha-<commit>) gerada no build;
+#   3. kubectl apply -k k8s/overlays/prod  +  kubectl rollout status.
+# Nenhuma senha é versionada no Git.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: loja-veloz
+resources:
+  - ../../base
+  - ingress.yaml
+
+images:
+  - { name: ghcr.io/bonanni92/pedidos-veloz-gateway, newTag: 0.1.0 }
+  - { name: ghcr.io/bonanni92/pedidos-veloz-pedidos, newTag: 0.1.0 }
+  - { name: ghcr.io/bonanni92/pedidos-veloz-estoque, newTag: 0.1.0 }
+  - { name: ghcr.io/bonanni92/pedidos-veloz-pagamentos, newTag: 0.1.0 }
+
+patches:
+  # Em produção, mais folga para a campanha: mínimo de 3 réplicas nos serviços críticos.
+  - target: { kind: HorizontalPodAutoscaler, name: "gateway|pedidos" }
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 3

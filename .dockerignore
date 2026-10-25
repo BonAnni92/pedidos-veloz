@@ -1,0 +1,16 @@
+# Mantém o contexto de build pequeno e evita vazar arquivos sensíveis
+.git
+.github
+.devcontainer
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/tests
+.env
+*.env
+k8s
+terraform
+docs
+observability
+scripts
+*.md

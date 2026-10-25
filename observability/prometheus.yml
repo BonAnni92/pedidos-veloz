@@ -1,0 +1,15 @@
+# Prometheus (ambiente local): coleta /metrics de cada microsserviço.
+# O nome do job vira o label "job", usado nos painéis do Grafana.
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  - job_name: gateway
+    static_configs: [{ targets: ["gateway:8000"] }]
+  - job_name: pedidos
+    static_configs: [{ targets: ["pedidos:8000"] }]
+  - job_name: estoque
+    static_configs: [{ targets: ["estoque:8000"] }]
+  - job_name: pagamentos
+    static_configs: [{ targets: ["pagamentos:8000"] }]

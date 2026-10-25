@@ -1,0 +1,25 @@
+[project]
+name = "pedidos-veloz"
+version = "0.1.0"
+description = "Plataforma de pedidos em microsserviços da Loja Veloz"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+# B008: Depends() em argumentos padrão é o padrão idiomático do FastAPI.
+# S311: random é usado só para simulação, não para criptografia.
+ignore = ["B008", "S311"]
+
+[tool.ruff.lint.per-file-ignores]
+"services/*/tests/*" = ["S101", "E402"]
+"scripts/*" = ["S310"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "veloz_common"]
+
+[tool.pytest.ini_options]
+addopts = "-q"

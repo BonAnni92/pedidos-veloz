@@ -1,0 +1,22 @@
+# Exposição pública apenas do API Gateway (TLS terminado no Ingress Controller).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pedidos-veloz
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt   # TLS automático (se cert-manager instalado)
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [pedidos.lojaveloz.com.br]
+      secretName: pedidos-veloz-tls
+  rules:
+    - host: pedidos.lojaveloz.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway
+                port: { number: 8000 }

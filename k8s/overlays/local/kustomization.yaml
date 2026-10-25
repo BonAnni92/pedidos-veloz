@@ -1,0 +1,29 @@
+# Overlay LOCAL (Rancher Desktop / kind / minikube)
+#   kubectl apply -k k8s/overlays/local
+# Usa as imagens construídas localmente com "docker compose build" (tag "local").
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: loja-veloz
+resources:
+  - ../../base
+
+images:
+  - { name: ghcr.io/bonanni92/pedidos-veloz-gateway, newTag: local }
+  - { name: ghcr.io/bonanni92/pedidos-veloz-pedidos, newTag: local }
+  - { name: ghcr.io/bonanni92/pedidos-veloz-estoque, newTag: local }
+  - { name: ghcr.io/bonanni92/pedidos-veloz-pagamentos, newTag: local }
+
+# Segredo APENAS de desenvolvimento. O sufixo de hash gerado pelo Kustomize
+# faz os Pods reiniciarem automaticamente quando a senha muda.
+secretGenerator:
+  - name: veloz-db-credentials
+    literals:
+      - username=veloz
+      - password=veloz_dev_123
+
+patches:
+  - target: { kind: ConfigMap, name: veloz-config }
+    patch: |-
+      - op: replace
+        path: /data/APP_ENV
+        value: local

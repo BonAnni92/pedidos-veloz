@@ -1,0 +1,29 @@
+# PodDisruptionBudget: durante manutenções do cluster (drain de nós),
+# garante que pelo menos 1 réplica de cada serviço continue no ar.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: gateway }
+spec:
+  minAvailable: 1
+  selector: { matchLabels: { app.kubernetes.io/name: gateway } }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: pedidos }
+spec:
+  minAvailable: 1
+  selector: { matchLabels: { app.kubernetes.io/name: pedidos } }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: estoque }
+spec:
+  minAvailable: 1
+  selector: { matchLabels: { app.kubernetes.io/name: estoque } }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: pagamentos }
+spec:
+  minAvailable: 1
+  selector: { matchLabels: { app.kubernetes.io/name: pagamentos } }

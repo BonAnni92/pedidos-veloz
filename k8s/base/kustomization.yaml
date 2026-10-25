@@ -1,0 +1,22 @@
+# Base comum a todos os ambientes. Ambientes (local, prod) são "overlays"
+# que alteram só o que muda: tags de imagem, segredos, réplicas, ingress.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: loja-veloz
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: pedidos-veloz
+    includeTemplates: true
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - postgres.yaml
+  - gateway.yaml
+  - pedidos.yaml
+  - estoque.yaml
+  - pagamentos.yaml
+  - hpa.yaml
+  - pdb.yaml
+  - networkpolicy.yaml

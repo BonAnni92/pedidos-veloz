@@ -1,0 +1,20 @@
+# Configuração NÃO sensível, separada da imagem (12-Factor, fator III).
+# A mesma imagem roda em qualquer ambiente; muda apenas este ConfigMap.
+# Credenciais ficam no Secret "veloz-db-credentials" (criado por overlay/pipeline).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: veloz-config
+data:
+  APP_ENV: production
+  LOG_LEVEL: INFO
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  PEDIDOS_URL: http://pedidos:8000
+  ESTOQUE_URL: http://estoque:8000
+  PAGAMENTOS_URL: http://pagamentos:8000
+  HTTP_TIMEOUT_SECONDS: "3"
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.observability.svc.cluster.local:4318
+  PAGAMENTO_LIMITE_CENTAVOS: "500000"
+  PAGAMENTO_LATENCIA_MAX_MS: "300"
+  PAGAMENTO_TAXA_FALHA: "0"

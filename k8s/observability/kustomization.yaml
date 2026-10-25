@@ -1,0 +1,9 @@
+# Stack de observabilidade no cluster:  kubectl apply -k k8s/observability
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: observability
+resources:
+  - namespace.yaml
+  - otel-collector.yaml
+  - jaeger.yaml
+  - prometheus.yaml

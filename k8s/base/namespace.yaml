@@ -1,0 +1,12 @@
+# Namespace da aplicação com Pod Security Admission (PSA) no nível "restricted".
+# O próprio API server REJEITA Pods que rodem como root, permitam escalonamento
+# de privilégio, não descartem capabilities ou não usem seccomp.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: loja-veloz
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

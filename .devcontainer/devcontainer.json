@@ -1,0 +1,29 @@
+{
+  "name": "Pedidos Veloz",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": { "minikube": "none", "helm": "none" },
+    "ghcr.io/devcontainers/features/terraform:1": {}
+  },
+  "hostRequirements": { "cpus": 4, "memory": "8gb" },
+  "postCreateCommand": "pip install -r requirements-dev.txt -r services/pedidos/requirements.txt && bash scripts/install-tools.sh",
+  "forwardPorts": [8080, 16686, 3000, 9090],
+  "portsAttributes": {
+    "8080": { "label": "API Gateway" },
+    "16686": { "label": "Jaeger" },
+    "3000": { "label": "Grafana" },
+    "9090": { "label": "Prometheus" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "ms-azuretools.vscode-docker",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "hashicorp.terraform"
+      ]
+    }
+  }
+}
