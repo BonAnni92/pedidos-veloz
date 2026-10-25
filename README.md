@@ -9,8 +9,6 @@ O caso é a **Loja Veloz**, um e-commerce de médio porte com três problemas:
 - dificuldade de escalar nos picos de acesso;
 - pouca rastreabilidade de falhas entre serviços.
 
-> 🎥 **Vídeo pitch:** _[COLE AQUI O LINK DO YOUTUBE]_
-> 📄 **Relatórios:** [`docs/`](docs/) (Parte Teórica e Parte Prática)
 
 ---
 
